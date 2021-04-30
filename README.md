@@ -1,0 +1,2 @@
+# battlescripts-platform
+Battlescripts Platform
