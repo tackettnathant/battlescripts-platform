@@ -1,0 +1,44 @@
+html, body {
+    padding:0;
+    margin:0;
+}
+#board {
+    width: min(100vw, 100vh);
+    height: min(100vw, 100vh);
+    border-collapse:collapse;
+    border:none !important;
+}
+table {
+    border-collapse: collapse;
+}
+table td {
+    border: 2px solid black;
+    width:33%;
+    font-size: calc(min(100vw, 100vh) * .25);
+    padding:0;
+    text-align:center;
+    font-family:sans-serif;
+}
+table td svg {
+    width:100%;
+    height:100%;
+    border:1px solid red;
+}
+table tr:first-child td {
+    border-top: 0;
+}
+table tr td:first-child {
+    border-left: 0;
+}
+table tr:last-child td {
+    border-bottom: 0;
+}
+table tr td:last-child {
+    border-right: 0;
+}
+.X {
+    color:red;
+}
+.O {
+    color:blue;
+}

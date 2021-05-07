@@ -1,0 +1,9 @@
+textarea {
+  width:500px;
+  height:150px;
+  display:block;
+}
+#results {
+  white-space:pre;
+  font-family:monospace;
+}
