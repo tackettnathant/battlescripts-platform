@@ -6,7 +6,6 @@ body, html {
   float:left;
   width:300px;
   height:100vh;
-  outline:1px solid blue;
 }
 .player {
   height:50vh;
@@ -20,7 +19,6 @@ textarea {
 
 #content {
   padding-left:20px;
-  outline:1px solid red;
   display:inline-block;
   width:calc(100vw - 350px);
   height:100vh;
