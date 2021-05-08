@@ -36,6 +36,9 @@ table tr:last-child td {
 table tr td:last-child {
     border-right: 0;
 }
+td.win {
+    background-color: #77ffc9;
+}
 .X {
     color:red;
 }
