@@ -1,7 +1,54 @@
+body, html {
+  margin:0;
+  padding:0;
+}
+#side_panel {
+  float:left;
+  width:300px;
+  height:100vh;
+  outline:1px solid blue;
+}
+.player {
+  height:50vh;
+}
 textarea {
-  width:500px;
-  height:150px;
+  width:100%;
+  height:calc(100% - 25px);
   display:block;
+  white-space:pre;
+}
+
+#content {
+  padding-left:20px;
+  outline:1px solid red;
+  display:inline-block;
+  width:calc(100vw - 350px);
+  height:100vh;
+  overflow:auto;
+}
+#header {
+  height:50px;
+}
+#viewer {
+  height:calc(80vh - 50px);
+}
+#render {
+
+}
+#game_list {
+  width:200px;
+  float:left;
+}
+.game_selected {
+  background-color:#F2F4FF;
+}
+iframe {
+  border:1px solid #ccc;
+  width:80%;
+  height:80%;
+}
+#console {
+  height:20vh;
 }
 #results {
   white-space:pre;

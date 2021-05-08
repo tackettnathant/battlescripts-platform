@@ -5,8 +5,11 @@
     <link rel="stylesheet" type="text/css" href="styles.css">
   </head>
   <body>
-    Player 1
-    <textarea id="p1">
+
+  <div id="side_panel">
+      <div class="player">
+        <div>Player 1</div>
+        <textarea id="p1">
 // Stupid Player #1
 // Take the first available move from top down
 module.exports = {
@@ -21,9 +24,12 @@ module.exports = {
     }
   }
 };
-    </textarea>
-    Player 2
-    <textarea id="p2">
+        </textarea>
+      </div>
+
+      <div class="player">
+        <div>Player 2</div>
+        <textarea id="p2">
 // Stupid Player #2
 // Move randomly
 module.exports = {
@@ -39,27 +45,26 @@ module.exports = {
   }
 };
     </textarea>
-
-    <input type="button" onclick="play()" value="Play"> <input id="games" size="3" value="10"> games
-
-    <div>Match Viewer:</div>
-
-    <div id="render">
-      <table>
-        <tr>
-          <td style="width:200px;" id="game_list">
-
-          </td>
-          <td>
-            <iframe id="game_render" src="./render/render.html" style="border:1px solid #ccc; width:200px;height:200px;"></iframe>
-          </td>
-        </tr>
-      </table>
-
+      </div>
     </div>
 
-    <div>API Response:</div>
-    <div id="results"></div>
+    <div id="content">
+      <div id="header">
+        <input type="button" onclick="play()" value="Play"> <input id="games" size="3" value="10"> games
+      </div>
+      <div id="viewer">
+        <div>Match Viewer:</div>
+        <div id="render">
+          <div id="game_list"></div>
+          <iframe id="game_render" src="./render/render.html"></iframe>
+        </div>
+      </div>
+      <div id="console">
+        <div>API Response:</div>
+        <div id="results"></div>
+      </div>
+    </div>
+
 
   </body>
 </html>
