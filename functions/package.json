@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "cross-blob": "^2.0.0",
+    "ddb-wrapper": "^1.0.1"
+  }
+}

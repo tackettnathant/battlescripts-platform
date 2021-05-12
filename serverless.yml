@@ -1,0 +1,98 @@
+org: mattkruse
+app: battlescripts-test
+service: battlescripts-test
+
+custom:
+  playerTableName: battlescripts-player
+  gameTableName: battlescripts-game
+  userTableName: battlescripts-user
+  rendererTableName: battlescripts-renderer
+
+frameworkVersion: '2'
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  lambdaHashingVersion: '20201221'
+  memorySize: 8000
+  region: us-east-1
+  timeout: 30
+  environment:
+    playerTableName: ${self:custom.playerTableName}
+    gameTableName: ${self:custom.gameTableName}
+    userTableName: ${self:custom.userTableName}
+    rendererTableName: ${self:custom.rendererTableName}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:*
+          Resource: '*'
+
+functions:
+  match:
+    handler: functions/handler.match
+    events:
+      - http:
+          path: /match
+          method: post
+          cors: true
+  getPlayer:
+    handler: functions/player.get
+    events:
+      - http:
+          path: /player/{id}
+          method: get
+          cors: true
+          request:
+            parameters:
+              paths:
+                id: true
+
+resources: # CloudFormation template syntax
+  Resources:
+    GameTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.gameTableName}
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: N
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+    PlayerTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.playerTableName}
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: N
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+    UserTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.userTableName}
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: N
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+    RendeerTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.rendererTableName}
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: N
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST

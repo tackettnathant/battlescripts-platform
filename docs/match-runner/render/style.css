@@ -22,7 +22,6 @@ table td {
 table td svg {
     width:100%;
     height:100%;
-    border:1px solid red;
 }
 table tr:first-child td {
     border-top: 0;
@@ -40,8 +39,8 @@ td.win {
     background-color: #77ffc9;
 }
 .X {
-    color:red;
+    color:var(--p1);
 }
 .O {
-    color:blue;
+    color:var(--p2);
 }

@@ -31,7 +31,7 @@ async function play() {
     "game":game,
     "games":games
   };
-  let url = 'https://u54uysdcqj.execute-api.us-east-1.amazonaws.com/dev/match';
+  let url = 'https://4nha55p4a6.execute-api.us-east-1.amazonaws.com/dev/match';
   console.log( JSON.stringify(req));
   try {
     results = await postData(url, req);
