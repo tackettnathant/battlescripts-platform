@@ -33,19 +33,59 @@ const util = {
     }
   },
 
-  simpleGet: function(table, id) {
-    return async function(event) {
-      let status = 200;
-      let response = "";
-      try {
-        let id = event.pathParameters.id;
-        response = await ddb.get(table, "id", +id);
-      } catch(e) {
-        response = e;
-        status = 500;
-      }
-      return util.CORSResponse(response, status);
+  simpleGet: async function(table, id) {
+    let status = 200;
+    let response = "";
+    try {
+      response = await ddb.get(table, "id", +id);
+    } catch(e) {
+      response = e;
+      status = 500;
     }
+    return util.CORSResponse(response, status);
+  },
+
+  simpleCreate: async function(table, record) {
+    let status = 200;
+    let response = "";
+    try {
+      // Generate a random id for now
+      let id = Math.floor(Math.random()*1000000000);
+      record.id = id;
+      await ddb.put(table, record);
+      response = await ddb.get(table, "id", id);
+    } catch(e) {
+      response = e;
+      status = 500;
+    }
+    return util.CORSResponse(response, status);
+  },
+
+  simpleUpdate: async function(table, record, keyAttribute) {
+    keyAttribute = keyAttribute || "id";
+    let status = 200;
+    let response = "";
+    try {
+      await ddb.update(table, keyAttribute, record);
+      response = await ddb.get(table, "id", record.id);
+    } catch(e) {
+      response = e;
+      status = 500;
+    }
+    return util.CORSResponse(response, status);
+  },
+
+  simpleDelete: async function(table, keyValue, keyAttribute) {
+    keyAttribute = keyAttribute || "id";
+    let status = 200;
+    let response = "";
+    try {
+      response = await ddb.delete(table, keyAttribute, keyValue);
+    } catch(e) {
+      response = e;
+      status = 500;
+    }
+    return util.CORSResponse(response, status);
   }
 
 };

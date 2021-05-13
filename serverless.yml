@@ -38,12 +38,130 @@ functions:
           path: /match
           method: post
           cors: true
+
+  # Player API's
+  # ------------
   getPlayer:
     handler: functions/player.get
     events:
       - http:
           path: /player/{id}
           method: get
+          cors: true
+          request:
+            parameters:
+              paths:
+                id: true
+  createPlayer:
+    handler: functions/player.create
+    events:
+      - http:
+          path: /player/
+          method: post
+          cors: true
+  updatePlayer:
+    handler: functions/player.update
+    events:
+      - http:
+          path: /player/{id}
+          method: put
+          cors: true
+          request:
+            parameters:
+              paths:
+                id: true
+  deletePlayer:
+    handler: functions/player.delete
+    events:
+      - http:
+          path: /player/{id}
+          method: delete
+          cors: true
+          request:
+            parameters:
+              paths:
+                id: true
+
+  # Game API's
+  # ------------
+  getGame:
+    handler: functions/game.get
+    events:
+      - http:
+          path: /game/{id}
+          method: get
+          cors: true
+          request:
+            parameters:
+              paths:
+                id: true
+  createGame:
+    handler: functions/game.create
+    events:
+      - http:
+          path: /game/
+          method: post
+          cors: true
+  updateGame:
+    handler: functions/game.update
+    events:
+      - http:
+          path: /game/{id}
+          method: put
+          cors: true
+          request:
+            parameters:
+              paths:
+                id: true
+  deleteGame:
+    handler: functions/game.delete
+    events:
+      - http:
+          path: /game/{id}
+          method: delete
+          cors: true
+          request:
+            parameters:
+              paths:
+                id: true
+
+  # Renderer API's
+  # --------------
+  getRenderer:
+    handler: functions/renderer.get
+    events:
+      - http:
+          path: /renderer/{id}
+          method: get
+          cors: true
+          request:
+            parameters:
+              paths:
+                id: true
+  createRenderer:
+    handler: functions/renderer.create
+    events:
+      - http:
+          path: /renderer/
+          method: post
+          cors: true
+  updateRenderer:
+    handler: functions/renderer.update
+    events:
+      - http:
+          path: /renderer/{id}
+          method: put
+          cors: true
+          request:
+            parameters:
+              paths:
+                id: true
+  deleteRenderer:
+    handler: functions/renderer.delete
+    events:
+      - http:
+          path: /renderer/{id}
+          method: delete
           cors: true
           request:
             parameters:

@@ -65,7 +65,7 @@ module.exports = {
       const ddb = new DDBWrapper('us-east-1');
 
       const battlescripts = require('./index.js');
-      //const game = require('./game.js');
+      //const game = require('./tic-tac-toe.js');
 
       let logs=[];
       let json = JSON.parse(event.body);
