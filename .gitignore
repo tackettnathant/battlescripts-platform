@@ -1,4 +1,5 @@
 .idea/
+.serverless/
 
 # Logs
 logs
