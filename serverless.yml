@@ -7,6 +7,9 @@ custom:
   gameTableName: battlescripts-game
   userTableName: battlescripts-user
   rendererTableName: battlescripts-renderer
+  secrets:
+    JWT_SECRET: 1gf8rofcOQOYxMMlkfCIOF2qU1Kwd2n9
+    CERT: ${file(./functions/auth0.pem)}
 
 frameworkVersion: '2'
 
@@ -22,6 +25,8 @@ provider:
     gameTableName: ${self:custom.gameTableName}
     userTableName: ${self:custom.userTableName}
     rendererTableName: ${self:custom.rendererTableName}
+    JWT_SECRET: ${self:custom.secrets.JWT_SECRET}
+    CERT: ${self:custom.secrets.CERT}
   iam:
     role:
       statements:
@@ -31,6 +36,23 @@ provider:
           Resource: '*'
 
 functions:
+  # Auth
+  # ----
+  verify-token:
+    handler: functions/authorize.handler
+
+  authTest:
+    handler: functions/authorize.test
+    events:
+      - http:
+          path: /test
+          method: get
+          cors: true
+          authorizer:
+            name: verify-token
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 3600 # cache the result for 1 hour
+
   match:
     handler: functions/handler.match
     events:

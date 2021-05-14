@@ -7,6 +7,7 @@
   id: Number,
   game: Number,      // game id
   name: String,
+  avatar: String,
   description: String,
   author: Number,    // user id
   author_name: String,
