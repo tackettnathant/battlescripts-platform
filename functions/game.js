@@ -3,7 +3,17 @@ const util = require('./util.js');
 module.exports = {
   get: async function(event) {
     let id = +event.pathParameters.id;
-    return await util.simpleGet(util.gameTable, id)
+    return await util.simpleGet(util.gameTable, id);
+  },
+
+  search: async function() {
+    return await util.simpleScan(util.gameTable, {
+      ProjectionExpression: "#id, #name",
+      ExpressionAttributeNames: {
+        "#id":"id",
+        "#name":"name"
+      }
+    });
   },
 
   create: async function(event) {

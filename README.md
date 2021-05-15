@@ -34,6 +34,8 @@
   author_name: String,
   language: "javascript",
   code: String,
+  player_template: String,
+  default_renderer: id,  // renderer id
   published: Boolean,
   logo: String,          // s3 arn
   banner: String,        // s3 arn
@@ -60,6 +62,7 @@
   css: String,
   html: String,
   sprite: String,        // s3 arn
+  test_state: String,
   
   version: String,       // semver
   created_on: DateTime,

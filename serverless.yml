@@ -5,6 +5,7 @@ service: battlescripts-test
 custom:
   playerTableName: battlescripts-player
   gameTableName: battlescripts-game
+  gameTableIndexName: battlescripts-game-index
   userTableName: battlescripts-user
   rendererTableName: battlescripts-renderer
   secrets:
@@ -23,6 +24,7 @@ provider:
   environment:
     playerTableName: ${self:custom.playerTableName}
     gameTableName: ${self:custom.gameTableName}
+    gameTableIndexName: ${self:custom.gameTableIndexName}
     userTableName: ${self:custom.userTableName}
     rendererTableName: ${self:custom.rendererTableName}
     JWT_SECRET: ${self:custom.secrets.JWT_SECRET}
@@ -117,6 +119,13 @@ functions:
             parameters:
               paths:
                 id: true
+  searchGame:
+    handler: functions/game.search
+    events:
+      - http:
+          path: /game
+          method: get
+          cors: true
   createGame:
     handler: functions/game.create
     events:

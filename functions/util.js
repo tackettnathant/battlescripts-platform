@@ -4,8 +4,10 @@ const ddb = new DDBWrapper('us-east-1');
 const util = {
   playerTable: process.env.playerTableName,
   gameTable: process.env.gameTableName,
+  gameTableIndex: process.env.gameTableIndexName,
   userTable: process.env.userTableName,
   rendererTable: process.env.rendererTableName,
+
 
   ddb: ddb,
 
@@ -38,6 +40,18 @@ const util = {
     let response = "";
     try {
       response = await ddb.get(table, "id", +id);
+    } catch(e) {
+      response = e;
+      status = 500;
+    }
+    return util.CORSResponse(response, status);
+  },
+
+  simpleScan: async function(table, params) {
+    let status = 200;
+    let response = "";
+    try {
+      response = await ddb.scan(table, params);
     } catch(e) {
       response = e;
       status = 500;
