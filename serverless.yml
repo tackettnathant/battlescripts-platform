@@ -138,6 +138,17 @@ functions:
     events:
       - http:
           path: /game/{id}
+          method: patch
+          cors: true
+          request:
+            parameters:
+              paths:
+                id: true
+  replaceGame:
+    handler: functions/game.replace
+    events:
+      - http:
+          path: /game/{id}
           method: put
           cors: true
           request:
@@ -155,6 +166,13 @@ functions:
             parameters:
               paths:
                 id: true
+  getGameTemplate:
+    handler: functions/game.template
+    events:
+      - http:
+          path: /game/template
+          method: get
+          cors: true
 
   # Renderer API's
   # --------------

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+</head>
+<body>
+<script src="https://unpkg.com/vue@next"></script>
+<script src="/monaco/min/vs/loader.js"></script>
+<script>
+  let game = {};
+  let renderer = {};
+
+  // INIT
+
+  addEventListener('DOMContentLoaded',async ()=>{
+    let id = document.location.search.replace(/^\?/,'');
+    if (id) {
+      game = await getGame(id);
+    }
+    else {
+      game = await getGameTemplate();
+    }
+    let app = await init_vue('#app',game);
+    await init_monaco();
+  });
+
+  // BATTLESCRIPTS API
+
+  let api = 'https://4nha55p4a6.execute-api.us-east-1.amazonaws.com/dev';
+  async function getGame(id) {
+    let game = {};
+    try {
+      let response = await fetch(`${api}/game/${id}`);
+      game = await response.json();
+    }
+    catch (e) {
+      alert(e);
+    }
+    return game;
+  }
+  async function getGameTemplate() {
+    let game = {};
+    try {
+      let response = await fetch(`${api}/game/template`);
+      game = await response.json();
+    }
+    catch (e) {
+      alert(e);
+    }
+    return game;
+  }
+
+  // VUE
+
+  async function init_vue(mount,data) {
+    const App = {
+      data() { return data; },
+      created() {},
+      mounted() {},
+      methods: {}
+    };
+    let app = await Vue.createApp(App);
+    await app.mount(mount);
+    return app;
+  }
+
+  // MONACO
+
+  async function init_monaco() {
+    console.log(game);
+
+    require.config({ paths: { 'vs': '/monaco/min/vs' }});
+    require(['vs/editor/editor.main'], function() {
+      // validation settings
+      monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
+        noSemanticValidation: true,
+        noSyntaxValidation: false
+      });
+
+      // compiler options
+      monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
+        target: monaco.languages.typescript.ScriptTarget.ES6,
+        allowNonTsExtensions: true
+      });
+
+      // load editors
+      document.querySelectorAll('.monaco-editor').forEach(div=>{
+        let model = div.getAttribute('model');
+        let language = div.getAttribute('language') || 'javascript';
+        let e = editor(div, game[model], language);
+      });
+
+
+    });
+
+  }
+  function editor(mount,code,language) {
+    return monaco.editor.create(mount, {
+      value: code,
+      language: (language||'javascript'),
+      theme: "vs-dark",
+      scrollBeyondLastLine: false,
+      scrollbar: {
+        verticalHasArrows: true,
+        horizontalHasArrows: true,
+        vertical: 'visible',
+      }
+    });
+  }
+</script>
+<div id="app">
+  <div>Game Info</div>
+  <div>
+    <div>Name: <input v-model="name"></div>
+  </div>
+  <div>Game Code</div>
+    <div class="monaco-editor" theme="vs-dark" style="width:500px;height:500px;border:1px solid black;" model="code" language="javascript"></div>
+  <div>Game Runner</div>
+
+  <div>Renderer</div>
+</div>
+
+</body>
+</html>

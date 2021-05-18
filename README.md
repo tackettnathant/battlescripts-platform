@@ -32,13 +32,14 @@
   reference: String,     // md
   author: Number,        // user id
   author_name: String,
-  language: "javascript",
   code: String,
   player_template: String,
   default_renderer: id,  // renderer id
   published: Boolean,
-  logo: String,          // s3 arn
+  logo_large: String,    // s3 arn
+  logo_small: String,    // s3 arn
   banner: String,        // s3 arn
+  screenshot: String,    // s3 arn
   
   version: String,       // semver
   created_on: DateTime,

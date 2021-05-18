@@ -8,9 +8,15 @@ const util = {
   userTable: process.env.userTableName,
   rendererTable: process.env.rendererTableName,
 
-
   ddb: ddb,
+  randomId: function() {
+    return Math.floor(Math.random()*1000000000);
+  },
+  now: Date.now(),
 
+  CORSError: function(content) {
+    return util.CORSResponse({"error":content}, 500);
+  },
   CORSResponse: function (content, status) {
     let contentType = "application/json";
     status = status || 200;
@@ -33,6 +39,31 @@ const util = {
       },
       body: content,
     }
+  },
+
+  cleanseRecord: function(submittedRecord, attributes, enforceRequiredFields=true) {
+    let record = {};
+
+    // Copy attributes - be strict
+    for (let attr in submittedRecord) {
+      if (!submittedRecord.hasOwnProperty(attr)) { continue; }
+      if (typeof attributes[attr]==="undefined") {
+        throw `Attribute ${attr} is not allowed`;
+      }
+      record[attr] = submittedRecord[attr];
+    }
+
+    // Make sure required attributes are included
+    if (enforceRequiredFields) {
+      for (let attr in attributes) {
+        if (attributes[attr]) { //required
+          if (!record.hasOwnProperty(attr)) {
+            throw `Attribute ${attr} is required but not present`;
+          }
+        }
+      }
+    }
+    return record;
   },
 
   simpleGet: async function(table, id) {
@@ -63,11 +94,29 @@ const util = {
     let status = 200;
     let response = "";
     try {
-      // Generate a random id for now
-      let id = Math.floor(Math.random()*1000000000);
-      record.id = id;
-      await ddb.put(table, record);
-      response = await ddb.get(table, "id", id);
+      await ddb.putUnique(table, record, "id");
+      response = await ddb.get(table, "id", record.id);
+    } catch(e) {
+      response = e;
+      status = 500;
+    }
+    return util.CORSResponse(response, status);
+  },
+
+  simpleReplace: async function(table, record) {
+    let status = 200;
+    let response = "";
+    try {
+      // Only allow replace if current record exists
+      let current_record = await ddb.get(table, "id", record.id);
+      if (!current_record || !current_record.id) {
+        throw "Cannot replace record that does not exist";
+      }
+      record.created_on = current_record.created_on;
+
+      await ddb.put(table, record, "id");
+
+      response = await ddb.get(table, "id", record.id);
     } catch(e) {
       response = e;
       status = 500;

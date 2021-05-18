@@ -8,6 +8,11 @@ module.exports = {
 
   create: async function(event) {
     let record = JSON.parse(event.body);
+
+    // Generate a random id for now
+    let id = Math.floor(Math.random()*1000000000);
+    record.id = id;
+
     return await util.simpleCreate(util.playerTable, record);
   },
 
