@@ -2,26 +2,95 @@
 <html>
 <head>
   <meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+  <style>
+    html,body {
+      margin:0;
+      padding:0;
+    }
+    [v-cloak] { display:none; }
+
+    .monaco-editor {
+      width:auto;
+      height:500px;
+      border:1px solid #ccc;
+    }
+
+    .layout {
+      display:flex;
+      flex-direction:column;
+      width:99vw;
+      height:99vh !important;
+      padding:0;
+    }
+    .header {
+      /*height:50px;*/
+      box-sizing: border-box;
+      border-bottom:1px solid black;
+    }
+    .tabs {
+      border-bottom:1px solid black;
+    }
+    .content {
+      flex:5;
+      height:100px;
+      display:flex;
+    }
+    .editors {
+      flex:1;
+      overflow-y:auto;
+    }
+    .canvas {
+      width:500px;
+      overflow:auto;
+      box-sizing: border-box;
+      border-left:1px solid black;
+    }
+
+    .tab {
+      display:inline-block;
+      padding:5px 10px;
+      border:1px solid #999;
+      margin:0 10px;
+      background-color:#ddd;
+      cursor:pointer;
+    }
+    .tab.active {
+      background-color: #80f5ff;
+    }
+  </style>
 </head>
 <body>
+
 <script src="https://unpkg.com/vue@next"></script>
 <script src="/monaco/min/vs/loader.js"></script>
 <script>
-  let game = {};
-  let renderer = {};
+  // Global ref to the Vue ViewModel instance
+  let $vm = null;
+  // Pre-define data attributes so Vue can detect changes
+  let data = {
+    loaded: false,
+    view: "game-info",
+    game: { id:null, name:null},
+    renderer: {}
+  };
+  // Global refs to Monaco editors, keyed by containing element id
+  let editors = {};
 
   // INIT
 
   addEventListener('DOMContentLoaded',async ()=>{
+    await init_vue('#app');
     let id = document.location.search.replace(/^\?/,'');
     if (id) {
-      game = await getGame(id);
+      $vm.game = await getGame(id);
     }
     else {
-      game = await getGameTemplate();
+      $vm.game = await getGameTemplate();
     }
-    let app = await init_vue('#app',game);
+    //console.log($vm.game.code);
     await init_monaco();
+    $vm.loaded = true;
+    init_canvas();
   });
 
   // BATTLESCRIPTS API
@@ -43,6 +112,7 @@
     try {
       let response = await fetch(`${api}/game/template`);
       game = await response.json();
+      //console.log(game);
     }
     catch (e) {
       alert(e);
@@ -52,53 +122,85 @@
 
   // VUE
 
-  async function init_vue(mount,data) {
+  async function init_vue(mount) {
     const App = {
-      data() { return data; },
+      data() {
+        return data;
+        },
       created() {},
       mounted() {},
-      methods: {}
+      methods: {
+        tab: name=>{
+          $vm.view=name;
+          resize_editors();
+        }
+      }
     };
     let app = await Vue.createApp(App);
-    await app.mount(mount);
-    return app;
+    $vm = await app.mount(mount);
   }
 
   // MONACO
 
-  async function init_monaco() {
-    console.log(game);
-
-    require.config({ paths: { 'vs': '/monaco/min/vs' }});
-    require(['vs/editor/editor.main'], function() {
-      // validation settings
-      monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
-        noSemanticValidation: true,
-        noSyntaxValidation: false
+  // TODO: Handle this better!!!
+  // This is a nasty hack that resizes all editors after Vue has updated its UI
+  // Monaco doesn't size itself correctly if the container isn't initially visible or on resize
+  function resize_editors() {
+    Vue.nextTick(()=>{
+      Object.values(editors).forEach(e=>{
+        e.layout();
       });
-
-      // compiler options
-      monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
-        target: monaco.languages.typescript.ScriptTarget.ES6,
-        allowNonTsExtensions: true
-      });
-
-      // load editors
-      document.querySelectorAll('.monaco-editor').forEach(div=>{
-        let model = div.getAttribute('model');
-        let language = div.getAttribute('language') || 'javascript';
-        let e = editor(div, game[model], language);
-      });
-
-
-    });
-
+    })
   }
-  function editor(mount,code,language) {
+  addEventListener('resize',resize_editors);
+
+  async function init_monaco() {
+    return new Promise((resolve)=> {
+      require.config({paths: {'vs': '/monaco/min/vs'}});
+      require(['vs/editor/editor.main'], async function () {
+        // validation settings
+        monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
+          noSemanticValidation: true,
+          noSyntaxValidation: false
+        });
+
+        // compiler options
+        monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
+          target: monaco.languages.typescript.ScriptTarget.ES6,
+          allowNonTsExtensions: true
+        });
+
+        // load editors
+        let editorDivs = document.querySelectorAll('.monaco-editor');
+        for (let i = 0; i < editorDivs.length; i++) {
+          let div = editorDivs[i];
+          let model = div.getAttribute('model');
+          let attr = div.getAttribute('attribute');
+          let language = div.getAttribute('language') || 'javascript';
+          //console.log(model,attr,language);
+          let code = "";
+          if (model && attr) {
+            code = $vm[model][attr];
+          }
+          let e = await editor(div, code, language);
+          let id = div.getAttribute('id');
+          if (id) {
+            editors[id] = e;
+          }
+          e.layout();
+        }
+
+        resolve();
+
+      });
+    });
+  }
+
+  async function editor(mount,code,language) {
     return monaco.editor.create(mount, {
       value: code,
       language: (language||'javascript'),
-      theme: "vs-dark",
+      //theme: "vs-dark",
       scrollBeyondLastLine: false,
       scrollbar: {
         verticalHasArrows: true,
@@ -107,18 +209,200 @@
       }
     });
   }
+
+  // Do the initial setup of the canvas to display our game
+  function init_canvas() {
+    if (!$vm || !$vm.loaded) { return; }
+    let iframe = document.getElementById('canvas').contentWindow;
+
+    // Set the initial base html
+    let html = editors['renderer-html'].getValue();
+    iframe.postMessage({type:"html",content:html},'*');
+
+    // Set the css
+    let css = editors['renderer-css'].getValue();
+    iframe.postMessage({type:"css",content:css},'*');
+
+    // Set the JS
+    let js = editors['renderer-js'].getValue();
+    iframe.postMessage({type:"js",content:js},'*');
+
+    update_canvas();
+  }
+
+  function update_canvas(state) {
+    if (state) {
+      editors["state"].setValue(state);
+    }
+    else {
+      state = editors["state"].getValue();
+    }
+    let iframe = document.getElementById('canvas').contentWindow;
+    iframe.postMessage({type:"state",content:state},'*');
+  }
+
+  function reset_canvas() {
+    document.getElementById('canvas').src = "empty.html";
+  }
+
+  // Receive messages from the display iframe
+  addEventListener('message', function(msg) {
+    //console.log("Message received in parent",msg);
+    let data = msg.data;
+    if (data==="canvas/ready") {
+      init_canvas();
+    }
+  });
+
+  async function save_game() {
+    let id = $vm.game.id;
+
+    // Get the editor contents out and back into the game object
+    $vm.game.code = editors['game-code'].getValue();
+    $vm.game.documentation = editors['game-documentation'].getValue();
+    $vm.game.player_template = editors['game-player-template'].getValue();
+
+    if (id) { //update
+      try {
+        let update_record = Object.assign({})
+        let response = await fetch(`${api}/game/${id}`, {
+          method:'PATCH',
+          mode:'cors',
+          body:JSON.stringify($vm.game)
+        });
+        let json = await response.json();
+        console.log(json);
+        if (json.error) {
+          alert("ERROR");
+        }
+        else {
+          alert("Update success!");
+        }
+      }
+      catch (e) {
+        alert(e);
+      }
+    }
+    else { //create
+      try {
+        // Remove the id attribute
+        delete $vm.game.id;
+        let response = await fetch(`${api}/game`, {
+          method:'POST',
+          mode:'cors',
+          body:JSON.stringify($vm.game)
+        });
+        let json = await response.json();
+        console.log(json);
+        if (json.error) {
+          alert("ERROR");
+        }
+        else {
+          alert("Create success!");
+          //location.href += "?"+json.id;
+          $vm.game = json;
+        }
+      } catch(e) {
+        alert(e);
+      }
+    }
+  }
+
+  async function save_renderer() {
+    let id = $vm.renderer.id;
+    let game_id = $vm.game.id;
+  }
+
 </script>
 <div id="app">
-  <div>Game Info</div>
-  <div>
-    <div>Name: <input v-model="name"></div>
-  </div>
-  <div>Game Code</div>
-    <div class="monaco-editor" theme="vs-dark" style="width:500px;height:500px;border:1px solid black;" model="code" language="javascript"></div>
-  <div>Game Runner</div>
+  <div v-show="!loaded">Loading...</div>
+  <div v-cloak v-show="loaded">
+    <div class="layout">
+      <div class="header">
+        <div v-show="game.id"><h1>Edit Game</h1></div>
+        <div v-show="!game.id"><h1>Create New Game</h1></div>
+        <div>Open your browser's console for info, warnings, and errors.</div>
+        <input type="button" value="Save Game" onclick="save_game()">
+        <input type="button" value="Save Renderer" onclick="save_renderer()">
+        <input type="button" onclick="reset_canvas()" value="Reset Canvas">
+        <input type="button" onclick="update_canvas()" value="Update Canvas with state">
 
-  <div>Renderer</div>
+      </div>
+      <div class="tabs">
+        Game:
+        <div class="tab" @click="tab('game-info')" :class="{active:view=='game-info'}">Info</div>
+        <div class="tab" @click="tab('game-code')" :class="{active:view=='game-code'}">Code</div>
+        <div class="tab" @click="tab('game-docs')" :class="{active:view=='game-docs'}">Documentation</div>
+        <div class="tab" @click="tab('game-players')" :class="{active:view=='game-players'}">Players</div>
+        Renderer:
+        <div class="tab" @click="tab('renderer-info')" :class="{active:view=='renderer-info'}">Info</div>
+        <div class="tab" @click="tab('renderer-code')" :class="{active:view=='renderer-code'}">Code</div>
+        <div class="tab" @click="tab('renderer-html')" :class="{active:view=='renderer-html'}">HTML</div>
+        <div class="tab" @click="tab('renderer-css')" :class="{active:view=='renderer-css'}">CSS</div>
+      </div>
+      <div class="content">
+        <div class="editors">
+
+          <div v-show="view=='game-info'">
+            <div>
+              <div v-show="game.id">id: {{game.id}}</div>
+              <div>Name: <input v-model="game.name"></div>
+              <div>Description: <textarea v-model="game.description"></textarea></div>
+            </div>
+          </div>
+
+          <div v-show="view=='game-code'">
+            <div id="game-code" class="monaco-editor" model="game" attribute="code" language="javascript"></div>
+          </div>
+
+          <div v-show="view=='game-docs'">
+            <div id="game-documentation" class="monaco-editor" style="width:40vw; display:inline-block;margin:5px;" model="game" attribute="documentation" language="markdown"></div>
+            <div id="game-documentation-view" style="width:40vw; display:inline-block;margin:5px;"></div>
+          </div>
+
+          <div v-show="view=='game-players'">
+            <h4>Player Template</h4>
+            <div id="game-player-template" class="monaco-editor" style="width:40vw; display:inline-block;margin:5px;" model="game" attribute="player_template" language="javascript"></div>
+            <h4>Test Player Code</h4>
+            <div id="p1" class="monaco-editor" style="width:40vw; display:inline-block;margin:5px;" model="game" attribute="p1" language="javascript"></div>
+            <div id="p2" class="monaco-editor" style="width:40vw; display:inline-block;margin:5px;" model="game" attribute="p2" language="javascript"></div>
+          </div>
+
+          <div v-show="view=='renderer-info'">
+            <div>
+              <div v-show="renderer.id">id: {{game.id}}</div>
+              <div>Name: <input v-model="renderer.name"></div>
+              <div>Description: <textarea v-model="renderer.description"></textarea></div>
+            </div>
+          </div>
+
+          <div v-show="view=='renderer-code'">
+            <div id="renderer-js" class="monaco-editor" model="renderer" attribute="js" language="javascript"></div>
+          </div>
+
+          <div v-show="view=='renderer-html'">
+            <div id="renderer-html" class="monaco-editor" model="renderer" attribute="html" language="html"></div>
+          </div>
+
+          <div v-show="view=='renderer-css'">
+            <div id="renderer-css" class="monaco-editor" model="renderer" attribute="css" language="css"></div>
+          </div>
+
+        </div>
+        <div class="canvas">
+
+          <h3>Match Runner</h3>
+          <iframe id="canvas" src="empty.html" style="width:500px;height:500px;border:1px solid #ccc;margin:5px;"></iframe>
+
+          <h4>State</h4>
+          <div id="state" class="monaco-editor" style="width:90%; display:inline-block;margin:5px;" language="json"></div>
+
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
+
 
 </body>
 </html>

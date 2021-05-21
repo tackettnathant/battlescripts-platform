@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Game</title>
+  <script>
+    if (parent) {
+      parent.postMessage('canvas/ready','*');
+    }
+    // Listen for messages from the containing window
+    addEventListener('message', function(msg) {
+      console.log("Message received in iframe", msg);
+      let data = msg.data;
+      let type = data.type;
+      let content = data.content;
+      if (type==="html") {
+        document.body.innerHTML = content;
+      }
+      if (type==="js") {
+        let s = document.createElement('script');
+        s.textContent = content;
+        document.head.append(s);
+      }
+      if (type==="css") {
+        let s = document.createElement('style');
+        s.textContent = content;
+        document.head.append(s);
+      }
+      if (type==="state") {
+        if (typeof render==="function") {
+          content = JSON.parse(content);
+          let html = render(content);
+          if (typeof html === "string") {
+            document.body.innerHTML = html;
+          }
+        }
+      }
+    })
+  </script>
+</head>
+<body>
+
+CANVAS
+
+</body>
+</html>
