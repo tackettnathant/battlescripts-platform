@@ -156,7 +156,7 @@
 
   async function init_monaco() {
     return new Promise((resolve)=> {
-      require.config({paths: {'vs': '/monaco/min/vs'}});
+      require.config({paths: {'vs': '../monaco/min/vs'}});
       require(['vs/editor/editor.main'], async function () {
         // validation settings
         monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
