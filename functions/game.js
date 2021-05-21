@@ -1,18 +1,21 @@
 const util = require('./util.js');
 
-// Game attributes and whether they are required
+// Game attributes and whether they are required, allow updates, type constraints, etc
 const attributes = {
-  name: true,
-  description: false,
-  documentation: false,
-  reference: false,
-  author: false,
-  author_name: false,
-  code: true,
-  player_template:false,
-  default_renderer: false,
-  published: false,
-  version: false
+  id:                { all: "ignore" },
+  name:              { create:"required", replace:"required", update: "allowed" },
+  description:       { all: "allowed" },
+  documentation:     { all: "allowed" },
+  reference:         { all: "allowed" },
+  author:            { all: "ignore", type:"number" },
+  author_name:       { all: "ignore" },
+  code:              { create:"required", replace:"required", all: "allowed" },
+  player_template:   { all: "allowed" },
+  default_renderer:  { all: "allowed", type:"number" },
+  version:           { all: "allowed" },
+  published:         { all: "ignore" },
+  created_on:        { all: "ignore" },
+  updated_on:        { all: "ignore" }
 };
 
 module.exports = {
@@ -83,7 +86,7 @@ module.exports = {
     }
 
     try {
-      record = util.cleanseRecord(submittedRecord, attributes);
+      record = util.cleanRecord(submittedRecord, attributes, "create");
     }
     catch (e) {
       return util.CORSError(e);
@@ -112,7 +115,7 @@ module.exports = {
     }
 
     try {
-      record = util.cleanseRecord(submittedRecord, attributes, false);
+      record = util.cleanRecord(submittedRecord, attributes, "update");
     }
     catch (e) {
       return util.CORSError(e);
@@ -139,7 +142,7 @@ module.exports = {
     }
 
     try {
-      record = util.cleanseRecord(submittedRecord, attributes);
+      record = util.cleanRecord(submittedRecord, attributes, "replace");
     }
     catch (e) {
       return util.CORSError(e);

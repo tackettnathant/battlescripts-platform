@@ -41,25 +41,43 @@ const util = {
     }
   },
 
-  cleanseRecord: function(submittedRecord, attributes, enforceRequiredFields=true) {
+  // Validate and clean a user-submitted record before doing anything with it
+  // access for each attribute can be defined for create, update, replace, or "all"
+  //   and have values "required" or "allowed"
+  // If an attribute has a type, it will be validated
+  cleanRecord: function(submittedRecord, attributes, method) {
     let record = {};
+    method = (method || "create").toLowerCase(); // default to create mode
 
-    // Copy attributes - be strict
+    // Copy attributes - be strict about it!!
+    // Ignore some attributes that exist when they GET the record but aren't allowed to UPDATE them
     for (let attr in submittedRecord) {
       if (!submittedRecord.hasOwnProperty(attr)) { continue; }
-      if (typeof attributes[attr]==="undefined") {
+      if (!attributes[attr]) {
         throw `Attribute ${attr} is not allowed`;
+      }
+      let access = attributes[attr][method] || attributes[attr]["all"] || "none";
+      if ("ignore"===access) {
+        // Don't copy this value to the db record
+        continue;
+      }
+      if ("allowed"!==access && "required"!==access) {
+        throw `Attribute ${attr} is not allowed`;
+      }
+      let type = attributes[attr].type || "string";
+      if (submittedRecord[attr]!==null && type !== typeof submittedRecord[attr]) {
+        throw `Attribute ${attr} is of the wrong type. Must be ${type}.`;
       }
       record[attr] = submittedRecord[attr];
     }
 
     // Make sure required attributes are included
-    if (enforceRequiredFields) {
-      for (let attr in attributes) {
-        if (attributes[attr]) { //required
-          if (!record.hasOwnProperty(attr)) {
-            throw `Attribute ${attr} is required but not present`;
-          }
+    for (let attr in attributes) {
+      if (!attributes.hasOwnProperty(attr)) { continue; }
+      let access = attributes[attr][method] || attributes[attr]["all"] || "none";
+      if ("required"===access) { //required
+        if (!record.hasOwnProperty(attr)) {
+          throw `Attribute ${attr} is required but not present`;
         }
       }
     }
